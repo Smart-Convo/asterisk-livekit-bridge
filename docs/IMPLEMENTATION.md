@@ -128,6 +128,46 @@ For a parallel rollout, route only one test DID to a new custom extension and
 leave the previous destination untouched as the rollback path. Apply changes
 through the FreePBX UI/database and `fwconsole reload`.
 
+## Adding another DID safely
+
+The running bridge and its `lkbridge` WebSocket client are shared and support
+concurrent per-call connections. A new DID does not need another bridge
+service, listening port, credential set, or LiveKit SIP trunk.
+
+Do not reuse a sample custom context blindly. The included example contains a
+deployment-specific hardcoded `CALL_AGENT_NUMBER`; if left unchanged, a new DID
+would publish incorrect metadata and might select the wrong backend agent.
+
+Use this onboarding checklist:
+
+1. Back up the DID's current FreePBX inbound destination.
+2. Normalize the DID to the digits-only value expected by the worker and ensure
+   the backend maps that number to the intended agent configuration.
+3. Allocate a new unused FreePBX custom extension.
+4. Copy the custom bridge context under a unique context name and set
+   `CALL_AGENT_NUMBER` and `CALLEE_NUMBER` to the new DID. Continue deriving
+   caller number, `UNIQUEID`, `LINKEDID`, and trace ID from the call.
+5. Create a FreePBX Custom Extension targeting
+   `Local/s@lkbridge-inbound-<did>/n`, or use the equivalent Custom Destination.
+6. Point only the new DID's Inbound Route at the new destination and apply the
+   FreePBX configuration.
+7. Verify the generated route and custom context:
+
+   ```bash
+   fwconsole reload
+   asterisk -rx "dialplan show <new-did>@from-trunk"
+   asterisk -rx "dialplan show s@lkbridge-inbound-<did>"
+   ```
+
+8. Test canonical attributes, one agent dispatch, full-duplex audio, DTMF,
+   linked-ID transfer, both hangup directions, and resource cleanup.
+9. If validation fails, restore that DID's previous FreePBX destination and
+   apply the configuration. Other bridge DIDs remain unchanged.
+
+For a larger DID fleet, a shared context may derive the normalized agent number
+from FreePBX's inherited `FROM_DID`. Validate every trunk's DID presentation
+before adopting that pattern; dedicated contexts are safer when formats differ.
+
 ## Transfer integration
 
 Transfers must target the original caller channel, not the WebSocket media leg.
@@ -208,4 +248,3 @@ than first audible PCM.
 Current committed tests cover metadata precedence, native SIP fallback, query
 fallback, and identifier sanitization. Future automated coverage should add
 mocked backpressure, disconnect, dispatch-race, and first-audio tests.
-
