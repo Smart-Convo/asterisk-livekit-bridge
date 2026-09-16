@@ -1,0 +1,21 @@
+[Unit]
+Description=Asterisk to LiveKit PCM media bridge
+After=network-online.target asterisk.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lkbridge
+Group=lkbridge
+EnvironmentFile=/etc/asterisk-livekit-bridge.env
+ExecStart=/opt/asterisk-livekit-bridge/asterisk-livekit-bridge
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

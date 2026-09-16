@@ -1,0 +1,6 @@
+Channel: Local/s@lkbridge-inbound/n
+CallerID: Bridge Smoke Test <+923001234567>
+MaxRetries: 0
+WaitTime: 20
+Application: Wait
+Data: 12
