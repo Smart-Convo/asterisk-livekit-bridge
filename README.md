@@ -26,3 +26,7 @@ LISTEN_ADDR=127.0.0.1:8091
 ```
 
 Endpoints are `GET /healthz` and WebSocket `/media` with subprotocol `media`.
+
+See [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md) for the architecture,
+media and metadata contracts, dependency list, FreePBX deployment, transfer
+behavior, latency correction, production results, operations, and rollback.
